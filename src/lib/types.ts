@@ -19,7 +19,12 @@ export type Variant = {
   is_main: boolean;
   is_published: boolean;
   created_at: string;
+  lyrics_sync?: SyncLine[] | null;
+  short_start?: number | null;
+  short_duration?: number | null;
 };
+
+export type SyncLine = { t: number | null; text: string };
 
 export type Song = {
   id: string;

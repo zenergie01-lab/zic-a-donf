@@ -104,6 +104,7 @@ function SongEditor({ song, albums, onChange }: { song: Song; albums: Album[]; o
             <button className="btn-ghost text-sm" onClick={() => run("…", () => supabase.from("variants").update({ is_published: !v.is_published }).eq("id", v.id))}>
               {v.is_published ? "Masquer" : "Publier"}
             </button>
+            <Link href={`/admin/clip/${v.id}`} className="btn-ghost text-sm">🎬 Clip{v.lyrics_sync?.length ? " ✓" : ""}</Link>
             <button className="btn-ghost text-sm text-rose-300" onClick={() => removeVariant(v)}>Supprimer</button>
           </li>
         ))}
