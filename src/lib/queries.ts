@@ -1,5 +1,5 @@
 import { supabase } from "./supabase";
-import type { Album, Song } from "./types";
+import type { Album, Rating, Score, Song } from "./types";
 
 const SONG_SELECT = "*, variants(*), albums(title, slug, cover_path)";
 
@@ -31,4 +31,18 @@ export async function fetchSong(slug: string) {
   const { data, error } = await supabase.from("songs").select(SONG_SELECT).eq("slug", slug).maybeSingle();
   if (error) throw error;
   return data as Song | null;
+}
+
+export async function fetchScores(variantIds?: string[]) {
+  let q = supabase.from("variant_scores").select("*");
+  if (variantIds) q = q.in("variant_id", variantIds);
+  const { data, error } = await q;
+  if (error) throw error;
+  return Object.fromEntries((data as Score[]).map((s) => [s.variant_id, s])) as Record<string, Score>;
+}
+
+export async function fetchMyRatings(variantIds: string[]) {
+  const { data, error } = await supabase.from("ratings").select("variant_id, message, emotion, melody").in("variant_id", variantIds);
+  if (error) throw error;
+  return Object.fromEntries((data as Rating[]).map((r) => [r.variant_id, r])) as Record<string, Rating>;
 }

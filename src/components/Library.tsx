@@ -38,7 +38,7 @@ export function Library() {
       <section className="pt-4">
         <h1 className="text-4xl sm:text-5xl">Des chansons pour se (re)découvrir</h1>
         <p className="mt-3 max-w-2xl text-stone-300">
-          Musique à texte, créée avec Suno, autour de la connaissance de Soi. Écoute, compare les variantes, et bientôt : vote pour celles qui te touchent.
+          Musique à texte, créée avec Suno, autour de la connaissance de Soi. Écoute, note les titres et départage les variantes en duel à l’aveugle.
         </p>
       </section>
 

@@ -41,3 +41,22 @@ export type Track = {
   coverUrl: string | null;
   songSlug: string;
 };
+
+export type Score = {
+  variant_id: string;
+  rating_count: number;
+  avg_message: number | null;
+  avg_emotion: number | null;
+  avg_melody: number | null;
+  avg_global: number | null;
+  duel_wins: number;
+  duel_total: number;
+};
+
+export type Rating = { variant_id: string; message: number; emotion: number; melody: number };
+
+export const CRITERIA = [
+  { key: "message", label: "Message", hint: "Le texte me parle, me fait réfléchir" },
+  { key: "emotion", label: "Émotion", hint: "Ça me touche, me fait vibrer" },
+  { key: "melody", label: "Mélodie", hint: "La musique, la voix, l’envie de réécouter" },
+] as const;
