@@ -43,7 +43,7 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
     if (!current || !("mediaSession" in navigator)) return;
     navigator.mediaSession.metadata = new MediaMetadata({
       title: current.title,
-      artist: `Zic à donf · ${current.label}`,
+      artist: `ZIC-ZIC · ${current.label}`,
       artwork: current.coverUrl ? [{ src: current.coverUrl, sizes: "512x512" }] : [],
     });
   }, [current]);

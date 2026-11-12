@@ -17,7 +17,7 @@ export async function generateMetadata({ params }: PageProps<"/titre/[slug]">): 
   return {
     title: song.title,
     description,
-    openGraph: { title: `${song.title} — Zic à donf`, description, type: "music.song" },
+    openGraph: { title: `${song.title} — ZIC-ZIC`, description, type: "music.song" },
   };
 }
 

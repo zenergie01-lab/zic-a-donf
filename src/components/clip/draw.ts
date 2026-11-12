@@ -71,7 +71,7 @@ export function drawFrame(ctx: CanvasRenderingContext2D, W: number, H: number, s
   // --- En-tête ---
   ctx.fillStyle = "rgba(255,236,210,0.75)";
   ctx.font = `600 ${30 * u}px ${SANS}`;
-  ctx.fillText("ZIC À DONF", W / 2, 150 * u);
+  ctx.fillText("ZIC-ZIC", W / 2, 150 * u);
   ctx.fillStyle = "rgba(255,240,220,0.95)";
   ctx.font = `${62 * u}px ${SERIF}`;
   block(ctx, d.title, W / 2, 250 * u, W * 0.8, 62 * u);

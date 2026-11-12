@@ -9,13 +9,13 @@ const DESCRIPTION =
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://zic-a-donf.vercel.app"),
-  title: { default: "Zic à donf — chansons pour se (re)découvrir", template: "%s · Zic à donf" },
+  title: { default: "ZIC-ZIC — chansons pour se (re)découvrir", template: "%s · ZIC-ZIC" },
   description: DESCRIPTION,
   openGraph: {
     type: "website",
-    siteName: "Zic à donf",
+    siteName: "ZIC-ZIC",
     locale: "fr_FR",
-    title: "Zic à donf — chansons pour se (re)découvrir",
+    title: "ZIC-ZIC — chansons pour se (re)découvrir",
     description: DESCRIPTION,
   },
   twitter: { card: "summary_large_image" },
@@ -31,7 +31,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <PlayerProvider>
             <header className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3 px-4 py-5">
               <Link href="/" className="font-serif text-2xl">
-                Zic <span className="text-amber-500">à donf</span>
+                ZIC<span className="text-amber-500">-ZIC</span>
               </Link>
               <nav className="flex items-center gap-4 text-sm text-stone-300">
                 <Link href="/">Écouter</Link>

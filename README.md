@@ -1,4 +1,4 @@
-# Zic à donf
+# ZIC-ZIC (projet zic-a-donf)
 
 Lecteur, albums et (bientôt) notation des titres Suno de Vince.
 Next.js 16 · Supabase self-hosted (schéma `zic`) · Vercel.
