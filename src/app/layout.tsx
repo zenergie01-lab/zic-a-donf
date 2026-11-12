@@ -4,9 +4,21 @@ import "./globals.css";
 import { PlayerProvider } from "@/components/Player";
 import { AuthProvider, UserMenu } from "@/components/Auth";
 
+const DESCRIPTION =
+  "Chansons à texte pour se (re)découvrir. Écoute les titres, note leur Message, leur Émotion et leur Mélodie, et départage les versions en duel à l’aveugle.";
+
 export const metadata: Metadata = {
-  title: { default: "Zic à donf", template: "%s · Zic à donf" },
-  description: "Chansons à texte de découverte et de connaissance de Soi — écoute, partage et vote.",
+  metadataBase: new URL("https://zic-a-donf.vercel.app"),
+  title: { default: "Zic à donf — chansons pour se (re)découvrir", template: "%s · Zic à donf" },
+  description: DESCRIPTION,
+  openGraph: {
+    type: "website",
+    siteName: "Zic à donf",
+    locale: "fr_FR",
+    title: "Zic à donf — chansons pour se (re)découvrir",
+    description: DESCRIPTION,
+  },
+  twitter: { card: "summary_large_image" },
 };
 
 export const viewport: Viewport = { themeColor: "#0f0d0b", width: "device-width", initialScale: 1 };
