@@ -1,6 +1,6 @@
 /* Carte d'aperçu pour les réseaux (Facebook, WhatsApp, LinkedIn, X…) — 1200×630 */
 export const OG_SIZE = { width: 1200, height: 630 };
-export const SITE_HOST = "zic-a-donf.vercel.app";
+export const SITE_HOST = "zic-zic.eclairerlinvisible.org";
 
 type Props = {
   kicker: string;

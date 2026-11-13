@@ -8,7 +8,7 @@ const DESCRIPTION =
   "Chansons à texte pour se (re)découvrir. Écoute les titres, note leur Message, leur Émotion et leur Mélodie, et départage les versions en duel à l’aveugle.";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://zic-a-donf.vercel.app"),
+  metadataBase: new URL("https://zic-zic.eclairerlinvisible.org"),
   title: { default: "ZIC-ZIC — chansons pour se (re)découvrir", template: "%s · ZIC-ZIC" },
   description: DESCRIPTION,
   openGraph: {

@@ -11,7 +11,7 @@ import { drawFrame, type ClipData } from "./draw";
 
 type Loaded = Variant & { songs: { title: string; slug: string; lyrics: string | null } };
 
-const SITE = "zic-a-donf.vercel.app";
+const SITE = "zic-zic.eclairerlinvisible.org";
 const MIMES = ["video/mp4;codecs=avc1.640028,mp4a.40.2", "video/mp4", "video/webm;codecs=vp9,opus", "video/webm"];
 
 export function ClipStudio({ variantId }: { variantId: string }) {
