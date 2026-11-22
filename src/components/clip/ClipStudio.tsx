@@ -25,6 +25,7 @@ export function ClipStudio({ variantId }: { variantId: string }) {
   const [busy, setBusy] = useState<string | null>(null);
   const [tapIndex, setTapIndex] = useState<number | null>(null);
   const [now, setNow] = useState(0);
+  const [audioDur, setAudioDur] = useState(0);
   const [video, setVideo] = useState<{ url: string; name: string } | null>(null);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -152,7 +153,7 @@ export function ClipStudio({ variantId }: { variantId: string }) {
       gain.gain.linearRampToValueAtTime(0, ac.currentTime + len);           // fondu de sortie
 
       const stream = new MediaStream([...canvas.captureStream(30).getVideoTracks(), ...dest.stream.getAudioTracks()]);
-      const rec = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 8_000_000, audioBitsPerSecond: 192_000 });
+      const rec = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: len > 120 ? 5_000_000 : 8_000_000, audioBitsPerSecond: 192_000 });
       const chunks: Blob[] = [];
       rec.ondataavailable = (e) => e.data.size && chunks.push(e.data);
       const done = new Promise<void>((ok) => { rec.onstop = () => ok(); });
@@ -184,6 +185,8 @@ export function ClipStudio({ variantId }: { variantId: string }) {
   }
 
   const synced = lines.filter((l) => l.t != null).length;
+  const fullLen = Math.ceil(audioDur || v.duration_seconds || 240);
+  const maxDur = Math.max(90, fullLen);
 
   return (
     <div className="space-y-6 pt-2">
@@ -212,7 +215,7 @@ export function ClipStudio({ variantId }: { variantId: string }) {
 
       <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
         <div className="space-y-3">
-          <audio ref={audioRef} src={audioUrl} crossOrigin="anonymous" controls preload="metadata" className="w-full" />
+          <audio ref={audioRef} src={audioUrl} crossOrigin="anonymous" controls preload="metadata" className="w-full" onLoadedMetadata={(e) => setAudioDur(e.currentTarget.duration || 0)} />
           <p className="text-xs text-stone-400">{synced}/{lines.length} lignes calées · position {fmtTime(now)}</p>
           {lines.length === 0 && <p className="text-sm text-rose-300">Pas de paroles : ajoute-les au titre dans « Mes titres ».</p>}
           <ol className="max-h-[60vh] space-y-1 overflow-y-auto pr-1">
@@ -238,7 +241,7 @@ export function ClipStudio({ variantId }: { variantId: string }) {
         <aside className="space-y-4">
           <canvas ref={canvasRef} width={540} height={960} className="w-full rounded-xl border border-white/10" />
           <div className="card space-y-3 p-4 text-sm">
-            <p className="font-medium">Extrait Short (9:16)</p>
+            <p className="font-medium">Extrait ou titre entier (9:16)</p>
             <label className="flex items-center justify-between gap-2">
               Début
               <span className="flex gap-1">
@@ -248,8 +251,13 @@ export function ClipStudio({ variantId }: { variantId: string }) {
             </label>
             <label className="block space-y-1">
               <span className="flex justify-between">Durée <b>{duration} s</b></span>
-              <input type="range" min={15} max={90} step={5} value={duration} onChange={(e) => setDuration(Number(e.target.value))} className="w-full accent-amber-500" />
+              <input type="range" min={15} max={maxDur} step={5} value={Math.min(duration, maxDur)} onChange={(e) => setDuration(Number(e.target.value))} className="w-full accent-amber-500" />
             </label>
+            <div className="grid grid-cols-2 gap-2">
+              <button className="btn-ghost px-2 py-1 text-xs" onClick={() => { setStart(0); setDuration(45); }}>Short 45 s</button>
+              <button className="btn-ghost px-2 py-1 text-xs" onClick={() => { setStart(0); setDuration(fullLen); }}>🎵 Titre entier ({fmtTime(fullLen).replace(/\.\d$/, "")})</button>
+            </div>
+            {start + duration > 180 && <p className="text-xs text-amber-300">Plus de 3 min : YouTube la publiera comme vidéo classique, pas comme Short.</p>}
             <button className="btn-ghost w-full" onClick={() => playFrom(start)}>▶ Prévisualiser l’extrait</button>
             <button className="btn w-full" onClick={exportVideo} disabled={!!busy || !synced}>🎬 Créer la vidéo</button>
             {video && (
