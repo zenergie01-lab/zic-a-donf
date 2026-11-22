@@ -3,11 +3,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { publicUrl, supabase } from "@/lib/supabase";
-import { cleanLyrics, fmtTime, parseTime } from "@/lib/lyrics";
+import { cleanLyrics, fmtTime, parseTime, shiftLine, withWords } from "@/lib/lyrics";
 import type { SyncLine, Variant } from "@/lib/types";
 import { slugify } from "@/lib/utils";
 import { useAuth } from "@/components/Auth";
-import { drawFrame, type ClipData } from "./draw";
+import { drawFrame, type ClipData, type ClipStyle } from "./draw";
 
 type Loaded = Variant & { songs: { title: string; slug: string; lyrics: string | null } };
 
@@ -21,6 +21,8 @@ export function ClipStudio({ variantId }: { variantId: string }) {
   const [lines, setLines] = useState<SyncLine[]>([]);
   const [start, setStart] = useState(0);
   const [duration, setDuration] = useState(45);
+  const [style, setStyle] = useState<ClipStyle>("karaoke");
+  const [format, setFormat] = useState<"9:16" | "16:9">("9:16");
   const [msg, setMsg] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [tapIndex, setTapIndex] = useState<number | null>(null);
@@ -49,9 +51,9 @@ export function ClipStudio({ variantId }: { variantId: string }) {
 
   const clip = useCallback((): ClipData => ({
     title: v?.songs.title ?? "",
-    lines: lines.filter((l) => l.t != null).sort((a, b) => a.t! - b.t!),
-    start, duration, site: SITE,
-  }), [v, lines, start, duration]);
+    lines: withWords(lines),
+    start, duration, site: SITE, style,
+  }), [v, lines, start, duration, style]);
 
   // Aperçu : redessine en continu à l'heure du lecteur
   useEffect(() => {
@@ -74,7 +76,7 @@ export function ClipStudio({ variantId }: { variantId: string }) {
     const a = audioRef.current;
     if (tapIndex == null || !a) return;
     const t = Math.round(a.currentTime * 10) / 10;
-    setLines((ls) => ls.map((l, i) => (i === tapIndex ? { ...l, t } : l)));
+    setLines((ls) => ls.map((l, i) => (i === tapIndex ? shiftLine({ ...l, words: undefined, end: undefined }, t) : l)));
     setTapIndex((i) => (i != null && i + 1 < lines.length ? i + 1 : null));
   }, [tapIndex, lines.length]);
 
@@ -90,7 +92,14 @@ export function ClipStudio({ variantId }: { variantId: string }) {
   if (!v) return <p className="py-10 text-center text-stone-400">{msg ?? "Chargement…"}</p>;
 
   const audioUrl = publicUrl("zic-audio", v.audio_path) ?? "";
-  const setLine = (i: number, patch: Partial<SyncLine>) => setLines((ls) => ls.map((l, k) => (k === i ? { ...l, ...patch } : l)));
+  const setLine = (i: number, patch: Partial<SyncLine>) =>
+    setLines((ls) => ls.map((l, k) => {
+      if (k !== i) return l;
+      const moved = "t" in patch ? shiftLine(l, patch.t ?? null) : l;
+      const { t: _t, ...rest } = patch;
+      void _t;
+      return { ...moved, ...rest };
+    }));
   const playFrom = (t: number) => { const a = audioRef.current; if (a) { a.currentTime = Math.max(0, t); a.play(); } };
   const current = (() => { let k = -1; lines.forEach((l, i) => { if (l.t != null && l.t <= now) k = i; }); return k; })();
 
@@ -124,7 +133,7 @@ export function ClipStudio({ variantId }: { variantId: string }) {
     if (!mime) { setMsg("❌ Ce navigateur ne sait pas enregistrer de vidéo. Utilise Chrome ou Edge sur ordinateur."); return; }
     audioRef.current?.pause();
     setVideo(null);
-    const W = 1080, H = 1920;
+    const [W, H] = format === "9:16" ? [1080, 1920] : [1920, 1080];
     const canvas = document.createElement("canvas");
     canvas.width = W; canvas.height = H;
     const ctx = canvas.getContext("2d")!;
@@ -175,7 +184,7 @@ export function ClipStudio({ variantId }: { variantId: string }) {
       await ac.close();
       const ext = mime.startsWith("video/mp4") ? "mp4" : "webm";
       const blob = new Blob(chunks, { type: mime.split(";")[0] });
-      setVideo({ url: URL.createObjectURL(blob), name: `${slugify(v!.songs.title)}-${slugify(v!.label)}-short.${ext}` });
+      setVideo({ url: URL.createObjectURL(blob), name: `${slugify(v!.songs.title)}-${slugify(v!.label)}-${style}-${format === "9:16" ? "vertical" : "horizontal"}.${ext}` });
       setMsg(`✅ Vidéo prête (${(blob.size / 1048576).toFixed(1)} Mo, ${ext.toUpperCase()}).`);
     } catch (e) {
       setMsg(`❌ ${(e as Error).message}`);
@@ -213,7 +222,7 @@ export function ClipStudio({ variantId }: { variantId: string }) {
         </div>
       )}
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
+      <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
         <div className="space-y-3">
           <audio ref={audioRef} src={audioUrl} crossOrigin="anonymous" controls preload="metadata" className="w-full" onLoadedMetadata={(e) => setAudioDur(e.currentTarget.duration || 0)} />
           <p className="text-xs text-stone-400">{synced}/{lines.length} lignes calées · position {fmtTime(now)}</p>
@@ -239,9 +248,23 @@ export function ClipStudio({ variantId }: { variantId: string }) {
         </div>
 
         <aside className="space-y-4">
-          <canvas ref={canvasRef} width={540} height={960} className="w-full rounded-xl border border-white/10" />
+          <canvas ref={canvasRef} width={format === "9:16" ? 540 : 960} height={format === "9:16" ? 960 : 540} className="w-full rounded-xl border border-white/10" />
+          <div className="card grid grid-cols-2 gap-2 p-3 text-sm">
+            <span className="col-span-2 text-xs text-stone-400">Style</span>
+            {(["karaoke", "zen"] as const).map((x) => (
+              <button key={x} onClick={() => setStyle(x)} className={`rounded-lg px-2 py-1.5 ${style === x ? "bg-amber-500 text-stone-950" : "bg-white/5"}`}>
+                {x === "karaoke" ? "🎤 Karaoké" : "🌅 Zen"}
+              </button>
+            ))}
+            <span className="col-span-2 mt-1 text-xs text-stone-400">Format</span>
+            {(["9:16", "16:9"] as const).map((x) => (
+              <button key={x} onClick={() => setFormat(x)} className={`rounded-lg px-2 py-1.5 ${format === x ? "bg-amber-500 text-stone-950" : "bg-white/5"}`}>
+                {x === "9:16" ? "📱 Vertical 9:16" : "🖥 YouTube 16:9"}
+              </button>
+            ))}
+          </div>
           <div className="card space-y-3 p-4 text-sm">
-            <p className="font-medium">Extrait ou titre entier (9:16)</p>
+            <p className="font-medium">Extrait ou titre entier</p>
             <label className="flex items-center justify-between gap-2">
               Début
               <span className="flex gap-1">

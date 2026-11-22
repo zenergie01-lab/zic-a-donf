@@ -75,6 +75,9 @@ export function SongView({ slug }: { slug: string }) {
                   </p>
                   {v.suno_style && <p className="truncate text-xs text-stone-400">{v.suno_style}</p>}
                 </div>
+                {v.lyrics_sync?.length ? (
+                  <Link href={`/karaoke/${v.id}`} className="rounded-full bg-amber-500/15 px-2.5 py-1 text-xs text-amber-300 hover:bg-amber-500/25">🎤 Karaoké</Link>
+                ) : null}
                 <span className="text-xs tabular-nums text-stone-500">{formatDuration(v.duration_seconds)}</span>
                 </div>
                 <div className="space-y-2 pl-12">

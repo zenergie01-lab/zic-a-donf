@@ -24,7 +24,8 @@ export type Variant = {
   short_duration?: number | null;
 };
 
-export type SyncLine = { t: number | null; text: string };
+export type SyncWord = { w: string; t: number | null };
+export type SyncLine = { t: number | null; text: string; end?: number | null; words?: SyncWord[] };
 
 export type Song = {
   id: string;

@@ -1,5 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
-import { alignLines, cleanLyrics, type TimedWord } from "@/lib/lyrics";
+import { alignLyrics, cleanLyrics, type TimedWord } from "@/lib/lyrics";
 
 export const maxDuration = 120;
 
@@ -74,8 +74,8 @@ export async function POST(req: Request) {
   }
   const result = (await tr.json()) as { words?: TimedWord[] };
   const words = result.words ?? [];
-  const times = alignLines(lines, words);
-  const found = times.filter((t) => t != null).length;
+  const synced = alignLyrics(lines, words);
+  const found = synced.filter((l) => l.t != null).length;
 
-  return json({ lines: lines.map((text, i) => ({ t: times[i], text })), found, total: lines.length, heardWords: words.length });
+  return json({ lines: synced, found, total: lines.length, heardWords: words.length });
 }
