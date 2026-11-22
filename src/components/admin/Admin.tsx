@@ -36,6 +36,7 @@ export function Admin() {
     return (
       <div className="card mx-auto mt-10 max-w-md space-y-3 p-6 text-center">
         <p>Ce compte ({session.user.email}) n’a pas les droits créateur.</p>
+        <p className="text-sm text-stone-400">Avec Google, utilise l’adresse de ton compte créateur, ou ajoute celle-ci comme créateur dans Studio.</p>
         <button className="btn-ghost" onClick={() => supabase.auth.signOut()}>Se déconnecter</button>
       </div>
     );
@@ -47,23 +48,40 @@ function Login() {
   const [password, setPassword] = useState("");
   const [msg, setMsg] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+
+  async function google() {
+    setMsg(null);
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: `${window.location.origin}/admin` },
+    });
+    if (error) setMsg("Connexion Google indisponible pour le moment.");
+  }
+
   return (
-    <form
-      className="card mx-auto mt-10 max-w-sm space-y-3 p-6"
-      onSubmit={async (e) => {
-        e.preventDefault();
-        setBusy(true); setMsg(null);
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) setMsg("Connexion refusée : vérifie l’email et le mot de passe.");
-        setBusy(false);
-      }}
-    >
+    <div className="card mx-auto mt-10 max-w-sm space-y-4 p-6">
       <h1 className="text-2xl">Espace créateur</h1>
-      <input className="field" type="email" required autoComplete="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
-      <input className="field" type="password" required autoComplete="current-password" placeholder="Mot de passe" value={password} onChange={(e) => setPassword(e.target.value)} />
+      <button onClick={google} className="flex w-full items-center justify-center gap-2 rounded-lg bg-white py-2.5 font-medium text-stone-900">
+        <span aria-hidden className="font-bold text-blue-600">G</span> Continuer avec Google
+      </button>
+      <p className="text-xs text-stone-500">Utilise le compte Google qui a la même adresse email que ton compte créateur.</p>
+      <div className="flex items-center gap-3 text-xs text-stone-500"><span className="h-px flex-1 bg-white/10" />ou<span className="h-px flex-1 bg-white/10" /></div>
+      <form
+        className="space-y-3"
+        onSubmit={async (e) => {
+          e.preventDefault();
+          setBusy(true); setMsg(null);
+          const { error } = await supabase.auth.signInWithPassword({ email, password });
+          if (error) setMsg("Connexion refusée : vérifie l’email et le mot de passe.");
+          setBusy(false);
+        }}
+      >
+        <input className="field" type="email" required autoComplete="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
+        <input className="field" type="password" required autoComplete="current-password" placeholder="Mot de passe" value={password} onChange={(e) => setPassword(e.target.value)} />
+        <button className="btn w-full" disabled={busy}>{busy ? "Connexion…" : "Se connecter avec le mot de passe"}</button>
+      </form>
       {msg && <p className="text-sm text-rose-300">{msg}</p>}
-      <button className="btn w-full" disabled={busy}>{busy ? "Connexion…" : "Se connecter"}</button>
-    </form>
+    </div>
   );
 }
 
