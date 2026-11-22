@@ -7,6 +7,7 @@ import { withWords } from "@/lib/lyrics";
 import type { Variant } from "@/lib/types";
 import { usePlayer } from "@/components/Player";
 import { drawFrame, type ClipData } from "./draw";
+import { SalonHost } from "./SalonHost";
 
 type Loaded = Variant & { songs: { title: string; slug: string } };
 
@@ -17,6 +18,7 @@ export function KaraokePlayer({ variantId }: { variantId: string }) {
   const [v, setV] = useState<Loaded | null | undefined>(undefined);
   const [playing, setPlaying] = useState(false);
   const [dur, setDur] = useState(0);
+  const [audioEl, setAudioEl] = useState<HTMLAudioElement | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const wrapRef = useRef<HTMLDivElement | null>(null);
@@ -78,7 +80,7 @@ export function KaraokePlayer({ variantId }: { variantId: string }) {
         )}
       </div>
       <audio
-        ref={audioRef}
+        ref={(el) => { audioRef.current = el; if (el !== audioEl) setAudioEl(el); }}
         src={publicUrl("zic-audio", v.audio_path) ?? ""}
         crossOrigin="anonymous"
         controls
@@ -88,6 +90,7 @@ export function KaraokePlayer({ variantId }: { variantId: string }) {
         onPause={() => setPlaying(false)}
         onLoadedMetadata={(e) => setDur(e.currentTarget.duration || 0)}
       />
+      <SalonHost audio={audioEl} variantId={v.id} />
       <p className="text-center text-xs text-stone-500">Les mots s’allument au rythme du chant. Les points ● ● ● annoncent la reprise : 3, 2, 1… chante !</p>
     </div>
   );
