@@ -6,6 +6,8 @@ import { supabase } from "@/lib/supabase";
 import { SALON_HOST, ServerClock, type HostSession } from "@/lib/salon";
 
 const KEY = "zic-salon-host";
+const LAT_KEY = "zic-salon-latency";
+const r2 = (x: number) => Math.round(x * 100) / 100;
 
 /** Panneau animateur : lance une session, affiche le QR code et diffuse la position de lecture. */
 export function SalonHost({ audio, variantId }: { audio: HTMLAudioElement | null; variantId: string }) {
@@ -23,6 +25,16 @@ export function SalonHost({ audio, variantId }: { audio: HTMLAudioElement | null
   const [qr, setQr] = useState<string | null>(null);
   const [big, setBig] = useState(false);
   const clock = useRef(new ServerClock());
+  // Retard de l'enceinte (Bluetooth, TV…) : décale tout le monde pour coller au son réellement entendu
+  const [latency, setLatency] = useState<number>(() => {
+    if (typeof window === "undefined") return 0;
+    try { return Number(localStorage.getItem(LAT_KEY) || 0); } catch { return 0; }
+  });
+  const changeLatency = (v: number) => {
+    const x = r2(Math.min(3, Math.max(0, v)));
+    setLatency(x);
+    try { localStorage.setItem(LAT_KEY, String(x)); } catch {}
+  };
 
   const link = session ? `${SALON_HOST}/salon/${session.pin}` : "";
 
@@ -37,18 +49,19 @@ export function SalonHost({ audio, variantId }: { audio: HTMLAudioElement | null
       p_session: session.session_id,
       p_token: session.host_token,
       p_playing: !audio.paused && !audio.ended,
-      p_position: audio.currentTime,
+      p_position: Math.max(0, audio.currentTime - latency),
       p_at: clock.current.now(),
       p_variant: variantId,
     });
     if (error) setMsg("⚠️ Synchro interrompue : " + error.message);
-  }, [session, audio, variantId]);
+  }, [session, audio, variantId, latency]);
 
   // Diffusion : à chaque action du lecteur + battement régulier
   useEffect(() => {
     if (!session || !audio) return;
     clock.current.calibrate().then(push);
-    const events = ["play", "pause", "seeked", "ended", "ratechange"] as const;
+    // « playing » = le son sort vraiment (après la mise en mémoire tampon), plus fiable que « play »
+    const events = ["play", "playing", "pause", "waiting", "seeked", "ended", "ratechange"] as const;
     events.forEach((e) => audio.addEventListener(e, push));
     const beat = setInterval(async () => {
       const t0 = Date.now() / 1000;
@@ -101,6 +114,15 @@ export function SalonHost({ audio, variantId }: { audio: HTMLAudioElement | null
         <span className="flex gap-2">
           <button className="btn" onClick={() => setBig(true)}>Afficher le QR</button>
           <button className="btn-ghost" onClick={end}>Terminer</button>
+        </span>
+        <span className="flex w-full flex-wrap items-center gap-2 text-xs text-stone-300">
+          🔈 Retard de l’enceinte :
+          <button className="btn-ghost px-2 py-0.5" onClick={() => changeLatency(latency - 0.05)}>−</button>
+          <b className="w-14 text-center font-mono">{latency.toFixed(2)} s</b>
+          <button className="btn-ghost px-2 py-0.5" onClick={() => changeLatency(latency + 0.05)}>+</button>
+          <button className="btn-ghost px-2 py-0.5" onClick={() => changeLatency(0)}>Filaire 0</button>
+          <button className="btn-ghost px-2 py-0.5" onClick={() => changeLatency(0.25)}>Bluetooth 0,25</button>
+          <span className="w-full text-stone-500">Si tous les téléphones sont en avance sur le son, augmente cette valeur.</span>
         </span>
         {msg && <p className="w-full text-xs text-amber-200">{msg}</p>}
       </div>
